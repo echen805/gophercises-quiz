@@ -1,22 +1,45 @@
-/*
-Copyright © 2020 NAME HERE <EMAIL ADDRESS>
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package main
 
-import "github.com/echen805/gophercises/quiz/cmd"
+import (
+	"bufio"
+	"encoding/csv"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+)
 
 func main() {
-	cmd.Execute()
+	quiz := make(map[string]int)
+	pwd, _ := os.Getwd()
+	f, _ := os.Open(filepath.Join(pwd,"problems.csv"))
+	r := csv.NewReader(bufio.NewReader(f))
+	fmt.Println("Preparing the quiz, get ready!")
+	for {
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		i, err := strconv.Atoi(record[1])
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(2)
+		}
+		quiz[record[0]] = i
+	}
+	fmt.Println("It's quiz time! Input your answer and press Enter when you are ready. " +
+		"Note: Once you press Enter, you cannot go back to a previous question.")
+	reader := bufio.NewReader(os.Stdin)
+	correct := 0
+	for prob, ans := range quiz {
+		fmt.Println(prob)
+		text, _,_ := reader.ReadLine()
+		userInput, _ := strconv.Atoi(strings.TrimSpace(string(text)))
+		if ans == userInput {
+			correct++
+		}
+	}
+	fmt.Printf("There were %d questions and you got %d correct.", len(quiz), correct)
 }
